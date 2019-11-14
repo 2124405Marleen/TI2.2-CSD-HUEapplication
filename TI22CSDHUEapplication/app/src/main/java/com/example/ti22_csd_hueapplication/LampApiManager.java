@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 public class LampApiManager {
-
+//TODO: De emulator moet aan staan om lampen te ontvangen
     private RequestQueue requestQueue;
     final String url = "http://localhost/api/newdeveloper";
     private LampListener lampListener;
