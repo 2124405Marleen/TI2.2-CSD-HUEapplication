@@ -8,16 +8,20 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
 
 public class LampApiManager {
 //TODO: De emulator moet aan staan om lampen te ontvangen
     private RequestQueue requestQueue;
-    final String url = "http://localhost/api/newdeveloper";
+    final String url = "http://192.168.2.17/api/newdeveloper";
     private LampListener lampListener;
     Context context;    //De betreffende activity
 
@@ -28,31 +32,38 @@ public class LampApiManager {
     }
 
     public void getLamps(){
-        final JsonArrayRequest request = new JsonArrayRequest(
+        final JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
                 url,
                 null,
-                new Response.Listener<JSONArray>() {
+                new Response.Listener<JSONObject>() {
                     @Override
-                    public void onResponse(JSONArray response) {
+                    public void onResponse(JSONObject response) {
                         Log.d("LAMP_REQ", response.toString());
-                        //TODO: De JSON uitlezen en lamp-objecten maken
-//                        try{
-//                            for (int idx = 0; idx < response.length(); idx++){
-//                                boolean on = response.getJSONObject(idx).getJSONObject("state").getBoolean("on");
-//                                String name = response.getJSONObject(idx).getString("name");
-//                                Lamp lamp = new Lamp(name);
+
+                        //TODO: fix thread interrupted foutmelding
+//                        try {
+//                            JSONObject lights = response.getJSONObject("lights");
+//                            for (Iterator<String> it = lights.keys(); it.hasNext(); ) {
+//                                String key = it.next();
+//                                JSONObject lamp = response.getJSONObject(key);
+//                                Log.d("LAMP_REQ", lamp.toString());
 //                            }
+//
 //                        } catch (JSONException e) {
 //                            e.printStackTrace();
 //                        }
+
+
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                Log.e("LAMP", error.toString());
 
             }
         });
         this.requestQueue.add(request);
+        this.requestQueue.start();
     }
 }
