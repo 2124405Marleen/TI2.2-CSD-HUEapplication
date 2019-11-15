@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 public class LampApiManager {
     //TODO: De emulator moet aan staan om lampen te ontvangen
-    //TODO: Eigen IP invullen
+    //TODO: Eigen IP invullen & via postman nieuwe gebruikersnaam maken
 
     private RequestQueue requestQueue;
     private String url = "http://145.49.45.174:80/api/cc553c2fc782c01e25e2b8c03729a80";
@@ -49,11 +49,10 @@ public class LampApiManager {
 
                         //TODO: fix thread interrupted foutmelding
                         try {
-                            JSONObject lights = response.getJSONObject("lights");
+                            JSONObject lights = response.getJSONObject("lights"); //klopt
                             for (Iterator<String> it = lights.keys(); it.hasNext(); ) {
-                                String key = it.next();
-                                JSONObject lamp = response.getJSONObject(key);
-                                Log.d("LAMP_REQ", lamp.toString());
+                                String key = it.next(); //klopt
+                                
                             }
 
                         } catch (JSONException e) {
