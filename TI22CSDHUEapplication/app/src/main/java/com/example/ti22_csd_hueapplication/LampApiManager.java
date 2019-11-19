@@ -19,21 +19,24 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 public class LampApiManager {
-    //TODO: De emulator moet aan staan om lampen te ontvangen
-    //TODO: Eigen IP invullen & via postman nieuwe gebruikersnaam maken
+    //TODO: De emulator moet aan staan om lampen te ontvangen (dus ook op start drukken met poort 80)
+    //TODO: Eigen IP invullen & via postman nieuwe gebruikersnaam aanvragen
 
     private RequestQueue requestQueue;
-    private String url = "http://145.49.45.174:80/api/cc553c2fc782c01e25e2b8c03729a80";
+    private String url = "http://145.49.45.174:80/api/e21fbfc60979036124b602ae2e9cf4f";
     private LampListener lampListener;
     Context context;    //De betreffende activity
+    private ArrayList<Lamp> lamps;
 
     public LampApiManager(Context context, LampListener lampListener){
         this.context = context;
         this.requestQueue = Volley.newRequestQueue(this.context);
         this.lampListener = lampListener;
+        this.lamps = new ArrayList<>();
     }
 
     public void getLamps(){
@@ -49,10 +52,21 @@ public class LampApiManager {
 
                         //TODO: fix thread interrupted foutmelding
                         try {
-                            JSONObject lights = response.getJSONObject("lights"); //klopt
+                            JSONObject lights = response.getJSONObject("lights");
                             for (Iterator<String> it = lights.keys(); it.hasNext(); ) {
-                                String key = it.next(); //klopt
-                                
+                                String key = it.next();
+                                JSONObject state = lights.getJSONObject(key).getJSONObject("state");
+                                boolean on = state.getBoolean("on");
+                                int brightness = state.getInt("bri");
+                                int hue = state.getInt("hue"); //
+                                int satuation = state.getInt("sat");
+                                boolean rechable = state.getBoolean("reachable");
+                                String colormode = state.getString("colormode");
+                                String type = lights.getJSONObject(key).getString("type");
+                                String name = lights.getJSONObject(key).getString("name");
+
+                                Lamp lamp = new Lamp(on, brightness, hue, satuation, rechable, colormode, type, name);
+                                lamps.add(lamp);
                             }
 
                         } catch (JSONException e) {
