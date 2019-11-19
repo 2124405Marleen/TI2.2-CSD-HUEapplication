@@ -17,7 +17,9 @@ public class MainActivity extends AppCompatActivity implements LampListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lampApiManager = new LampApiManager(getApplicationContext(), this);
-        lampApiManager.getLamps();
+        this.lamps = lampApiManager.getLamps();
+
+
     }
 
     @Override

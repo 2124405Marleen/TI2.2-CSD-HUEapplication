@@ -39,7 +39,7 @@ public class LampApiManager {
         this.lamps = new ArrayList<>();
     }
 
-    public void getLamps(){
+    public ArrayList<Lamp> getLamps(){
 
         final JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
@@ -85,5 +85,6 @@ public class LampApiManager {
             }
         });
         this.requestQueue.add(request);
+        return lamps;
     }
 }
