@@ -27,7 +27,7 @@ public class LampApiManager {
     //TODO: Eigen IP invullen & via postman nieuwe gebruikersnaam aanvragen
 
     private RequestQueue requestQueue;
-    private String url = "http://145.49.45.174:80/api/e21fbfc60979036124b602ae2e9cf4f";
+    private String url = "http://145.49.45.174:80/api/3a75efa57480163a815bc63f9209cef";
     private LampListener lampListener;
     Context context;    //De betreffende activity
     private ArrayList<Lamp> lamps;
@@ -58,7 +58,7 @@ public class LampApiManager {
                                 JSONObject state = lights.getJSONObject(key).getJSONObject("state");
                                 boolean on = state.getBoolean("on");
                                 int brightness = state.getInt("bri");
-                                int hue = state.getInt("hue"); //
+                                int hue = state.getInt("hue");
                                 int satuation = state.getInt("sat");
                                 boolean rechable = state.getBoolean("reachable");
                                 String colormode = state.getString("colormode");
@@ -72,7 +72,7 @@ public class LampApiManager {
                         } catch (JSONException e) {
                             e.printStackTrace();
                             //Als de Emulator zegt: "Linking has expired" klik op de knop links onderin de emulator
-                            //Als er een TimeoutError is, ligt dat aan de firewall. De applicatie toestaan in firewall of netwerkstatus op prive
+                            //Als er een TimeoutError is, ligt dat aan de firewall. De applicatie toestaan in firewall of netwerkstatus op prive OF wifi hotspot!
                         }
 
 
