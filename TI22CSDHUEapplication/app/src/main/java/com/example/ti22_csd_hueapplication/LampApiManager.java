@@ -1,18 +1,13 @@
 package com.example.ti22_csd_hueapplication;
 
 import android.content.Context;
-import android.net.wifi.WifiManager;
-import android.text.format.Formatter;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -27,46 +22,55 @@ public class LampApiManager {
     //TODO: Eigen IP invullen & via postman nieuwe gebruikersnaam aanvragen
 
     private RequestQueue requestQueue;
-    private String url = "http://145.49.45.174:80/api/3a75efa57480163a815bc63f9209cef";
-    private LampListener lampListener;
-    Context context;    //De betreffende activity
-    private ArrayList<Lamp> lamps;
+    private String username;
+    private String address;
+//    private String url = "http://145.49.45.174/api/3a75efa57480163a815bc63f9209cef";
+    private LampApiListener listener;
+//    private Context context;    //De betreffende activity
 
-    public LampApiManager(Context context, LampListener lampListener){
-        this.context = context;
-        this.requestQueue = Volley.newRequestQueue(this.context);
-        this.lampListener = lampListener;
-        this.lamps = new ArrayList<>();
+    public LampApiManager(String username, String address, Context context, LampApiListener lampApiListener) {
+        this.username = username;
+        this.address = address;
+//        this.context = context;
+        this.requestQueue = Volley.newRequestQueue(context);
+        listener = lampApiListener;
     }
 
-    public ArrayList<Lamp> getLamps(){
+    public void getLamps() {
+        String GET_URL = "http://" + address + "/api/" + username;
 
-        final JsonObjectRequest request = new JsonObjectRequest(
+        JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET,
-                url,
+                GET_URL,
                 null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d("LAMP_REQ", response.toString());
+                        Log.d("!!!!!!!LAMP_REQ", response.toString());
 
                         //TODO: fix thread interrupted foutmelding
                         try {
-                            JSONObject lights = response.getJSONObject("lights");
-                            for (Iterator<String> it = lights.keys(); it.hasNext(); ) {
-                                String key = it.next();
-                                JSONObject state = lights.getJSONObject(key).getJSONObject("state");
-                                boolean on = state.getBoolean("on");
-                                int brightness = state.getInt("bri");
-                                int hue = state.getInt("hue");
-                                int satuation = state.getInt("sat");
-                                boolean rechable = state.getBoolean("reachable");
-                                String colormode = state.getString("colormode");
-                                String type = lights.getJSONObject(key).getString("type");
-                                String name = lights.getJSONObject(key).getString("name");
+                            JSONObject lampsJO = response.getJSONObject("lights");
 
-                                Lamp lamp = new Lamp(on, brightness, hue, satuation, rechable, colormode, type, name);
-                                lamps.add(lamp);
+                            for (Iterator<String> it = lampsJO.keys(); it.hasNext(); ) {
+                                String key = it.next();
+                                JSONObject state = lampsJO.getJSONObject(key).getJSONObject("state");
+                                Log.d("L00000000GGG", "onResponse: " + key);
+
+                                Lamp lamp = new Lamp(
+                                        Integer.parseInt(key),
+                                        state.getBoolean("on"),
+                                        state.getInt("hue"),
+                                        state.getInt("sat"),
+                                        state.getInt("bri"),
+                                        state.getBoolean("reachable"),
+                                        state.getString("colormode"),
+                                        state.getString("effect"),
+                                        lampsJO.getJSONObject(key).getString("type"),
+                                        lampsJO.getJSONObject(key).getString("name")
+                                );
+                                Log.d("NEW_LIGHT", lamp.toString());
+                                listener.onLampAvailable(lamp);
                             }
 
                         } catch (JSONException e) {
@@ -85,6 +89,133 @@ public class LampApiManager {
             }
         });
         this.requestQueue.add(request);
-        return lamps;
     }
+
+    public void setLamp(Lamp lamp) {
+        String PUT_URL_State = "http://" + address + "/api/" + username + "/lights/" + lamp.getId() + "/state/";
+        Log.d("!!!!!!!!!", "RU: " + PUT_URL_State);
+
+        JSONObject stateJO = new JSONObject();
+
+        try {
+            if(lamp.isOn()){
+                stateJO.put("on", lamp.isOn());
+                stateJO.put("hue", lamp.getHue());
+                stateJO.put("sat", lamp.getSat());
+                stateJO.put("bri", lamp.getBri());
+                stateJO.put("effect", lamp.getEffect());
+            } else {
+                stateJO.put("on", lamp.isOn());
+            }
+
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+        }
+
+        Log.d("setLamp()", "PUT Body:" + stateJO.toString());
+
+        CustomJsonArrayRequest requestState = new CustomJsonArrayRequest(
+                Request.Method.PUT,
+                PUT_URL_State,
+                stateJO,
+
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d("setLamp() state", "onResponse: " + response.toString());
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("setLamp() state", "onErrorResponse: " + error.toString());
+                    }
+                }
+        );
+
+        this.requestQueue.add(requestState);
+    }
+
+    public void setLampName(Lamp lamp) {
+
+        String PUT_URL_Lamp = "http://" + address + "/api/" + username + "/lights/" + lamp.getId();
+
+        Log.d("!!!!!!!!!", "RU: " + PUT_URL_Lamp);
+
+        JSONObject lampJO = new JSONObject();
+
+        try {
+
+            lampJO.put("name", lamp.getName());
+
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+        }
+
+        Log.d("setLamp()", "PUT Body:" + lampJO.toString());
+
+        CustomJsonArrayRequest requestLamp = new CustomJsonArrayRequest(
+                Request.Method.PUT,
+                PUT_URL_Lamp,
+                lampJO,
+
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d("setLamp() lamp", "onResponse: " + response.toString());
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("setLamp() lamp", "onErrorResponse: " + error.toString());
+                    }
+                }
+        );
+
+        this.requestQueue.add(requestLamp);
+    }
+
+
+    public void setLampOnOff(Lamp lamp){
+        String PUT_URL_StateOnOFF = "http://" + address + "/api/" + username + "/lights/" + lamp.getId() + "/state/";
+        Log.d("!!!!!!!!!", "RU: " + PUT_URL_StateOnOFF);
+
+        JSONObject stateJO = new JSONObject();
+
+        try {
+                stateJO.put("on", lamp.isOn());
+
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+        }
+
+        Log.d("setLamp()", "PUT Body:" + stateJO.toString());
+
+        CustomJsonArrayRequest requestState = new CustomJsonArrayRequest(
+                Request.Method.PUT,
+                PUT_URL_StateOnOFF,
+                stateJO,
+
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d("setLamp() state", "onResponse: " + response.toString());
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("setLamp() state", "onErrorResponse: " + error.toString());
+//                        listener.onBitcoinTrackerError(new Error(error));
+                    }
+                }
+        );
+
+        this.requestQueue.add(requestState);
+    }
+
 }
