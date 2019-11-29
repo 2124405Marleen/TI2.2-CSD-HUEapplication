@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -31,6 +32,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.IllegalFormatCodePointException;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements LampApiListener, RecyclerViewAdapter.ItemClickListener {
 
@@ -45,12 +48,15 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
     private SeekBar hue, sat, bri;
     private TextView lampNo, lampOnOff;
     private Lamp currentPopupLamp;
-    //    private View currentLampView;
-    private ImageView currentLampImageView;
     private Switch switchOnOff;
+    private Switch switchDisco;
     private EditText lampName;
     private Button buttonNameConfirm;
     private int currentPosition;
+    private Thread thread;
+    Handler handler;
+    Runnable runnableCode;
+    int hueInt = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,9 +72,28 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 
         initRecycleView();
         initPopupView();
+        initHandler();
 
     }
 
+    private void initHandler(){
+        handler = new Handler();
+         runnableCode = new Runnable() {
+
+            @Override
+            public void run() {
+                //System.out.println("Disco!");
+                hueInt += 4000;
+                currentPopupLamp.setHue(hueInt);
+                LAM.setLamp(currentPopupLamp);
+                handler.postDelayed(this, 600);
+                if (hueInt > 64000){
+                    hueInt = 0;
+                }
+
+            }
+        };
+    }
     private void initRecycleView() {
         // set up the RecyclerView
         recyclerView = findViewById(R.id.rvLamps);
@@ -99,10 +124,9 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         lampOnOff = popupView.findViewById(R.id.POTextViewAvailable);
         lampName = popupView.findViewById(R.id.POEditTextName);
         buttonNameConfirm = popupView.findViewById(R.id.POButtonConfirm);
-
-
+        
         switchOnOff = popupView.findViewById(R.id.POSwitchOnOff);
-
+        switchDisco = popupView.findViewById(R.id.POSwitchDisco);
 
         //set seekbars: hue, sat, bri
         hue = popupView.findViewById(R.id.POHue);
@@ -161,6 +185,28 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 LAM.setLampOnOff(currentPopupLamp);
             }
         });
+
+        switchDisco.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
+                currentPopupLamp.setSat(0);
+                currentPopupLamp.setBri(254);
+                adapter.notifyItemChanged(currentPosition);
+
+                if (isChecked) {
+                    handler.post(runnableCode);
+                    System.out.println("Disco started");
+                } else{
+                    handler.removeCallbacks(runnableCode);
+                    System.out.println("Disco stopped");
+                }
+            }
+        });
+
+        //set seekbars: hue, sat, bri
+        hue = popupView.findViewById(R.id.POHue);
+        sat = popupView.findViewById(R.id.POSaturation);
+        bri = popupView.findViewById(R.id.POBrightness);
 
         //set seekbars listeners
         hue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

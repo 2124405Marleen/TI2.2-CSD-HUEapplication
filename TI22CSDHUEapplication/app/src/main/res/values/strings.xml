@@ -3,4 +3,5 @@
     <string name="hue_label">Hue</string>
     <string name="sat_label">Saturation</string>
     <string name="bri_label">Brightness</string>
+    <string name="disco_label">Disco Mode</string>
 </resources>

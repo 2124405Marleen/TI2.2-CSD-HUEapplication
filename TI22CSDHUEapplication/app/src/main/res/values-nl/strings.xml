@@ -2,5 +2,6 @@
 <resources>
     <string name="hue_label">Kleur</string>
     <string name="sat_label">Felheid</string>
-    <string name="bri_label">Helderheid</string>
+    <string name="bri_label">Intensiteit</string>
+    <string name="disco_label">Disco modes</string>
 </resources>
