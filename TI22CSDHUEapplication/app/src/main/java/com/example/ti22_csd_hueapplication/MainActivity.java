@@ -81,9 +81,9 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 
     }
 
-    private void initDiscoHandler(){
+    private void initDiscoHandler() {
         handler = new Handler();
-         runnableCode = new Runnable() {
+        runnableCode = new Runnable() {
 
             @Override
             public void run() {
@@ -93,14 +93,15 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 currentPopupLamp.setHue(hueInt);
                 LAM.setLamp(currentPopupLamp);
                 handler.postDelayed(this, 600);
-                if (hueInt > 64000){
+                if (hueInt > 64000) {
                     hueInt = 0;
                 }
 
             }
         };
     }
-    private void initPreferences(){
+
+    private void initPreferences() {
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         editor = preferences.edit();
         //s = ip s1 = username
@@ -109,19 +110,19 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         editor.apply();
     }
 
-    private void logdAllPreferences(){
+    private void logdAllPreferences() {
         Map<String, ?> keyValues = preferences.getAll();
         for (Map.Entry<String, ?> kv : keyValues.entrySet()) {
             Log.d("___KEYS", "ip: " + kv.getKey() + " | username: " + kv.getValue().toString());
         }
     }
 
-    public void showNotification(String message){
+    public void showNotification(String message) {
         Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
     }
 
 
-    private void initLampApiManager(){
+    private void initLampApiManager() {
         Map.Entry<String, ?> kv = preferences.getAll().entrySet().iterator().next();
         Log.d("___KEY_First", "ip: " + kv.getKey() + " | username: " + kv.getValue().toString());
 
@@ -208,7 +209,6 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                     } else {
                         buttonNameConfirm.setBackgroundColor(Color.GREEN);
                         showNotification("Name is changed");
-                        
                     }
 
                     return true;
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             }
         });
 
-        //switch listener
+        //switch lamp on/off listener
         switchOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 currentPopupLamp.setOn(isChecked);
@@ -230,6 +230,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             }
         });
 
+        //switch lamp disco on/off listener
         switchDisco.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
@@ -240,18 +241,13 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 if (isChecked) {
                     handler.post(runnableCode);
                     System.out.println("Disco started");
-                } else{
+                } else {
                     handler.removeCallbacks(runnableCode);
                     System.out.println("Disco stopped");
                     adapter.notifyItemChanged(currentPosition);
                 }
             }
         });
-
-        //set seekbars: hue, sat, bri
-        hue = popupView.findViewById(R.id.POHue);
-        sat = popupView.findViewById(R.id.POSaturation);
-        bri = popupView.findViewById(R.id.POBrightness);
 
         //set seekbars listeners
         hue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -328,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                showNotification("Refreshing Lamps");
                 lamps.clear();
                 adapter.notifyDataSetChanged();
                 LAM.getLamps();
