@@ -11,8 +11,6 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -31,9 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.IllegalFormatCodePointException;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements LampApiListener, RecyclerViewAdapter.ItemClickListener {
 
@@ -60,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
     private ImageView imageViewColor;
     private SwipeRefreshLayout swipeContainer;
     private Thread thread;
-    Handler handler;
+    Handler discoHandler;
     Runnable runnableCode;
     int hueInt = 0;
 
@@ -82,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
     }
 
     private void initDiscoHandler() {
-        handler = new Handler();
+        discoHandler = new Handler();
         runnableCode = new Runnable() {
 
             @Override
@@ -92,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 hueInt += 4000;
                 currentPopupLamp.setHue(hueInt);
                 LAM.setLamp(currentPopupLamp);
-                handler.postDelayed(this, 600);
+                discoHandler.postDelayed(this, 600);
                 if (hueInt > 64000) {
                     hueInt = 0;
                 }
@@ -239,10 +235,10 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 adapter.notifyItemChanged(currentPosition);
 
                 if (isChecked) {
-                    handler.post(runnableCode);
+                    discoHandler.post(runnableCode);
                     System.out.println("Disco started");
                 } else {
-                    handler.removeCallbacks(runnableCode);
+                    discoHandler.removeCallbacks(runnableCode);
                     System.out.println("Disco stopped");
                     adapter.notifyItemChanged(currentPosition);
                 }
