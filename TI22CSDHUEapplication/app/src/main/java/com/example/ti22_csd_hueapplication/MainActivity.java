@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             @Override
             public void run() {
                 //System.out.println("Disco!");
+                currentPopupLamp.setSat(254);
                 hueInt += 4000;
                 currentPopupLamp.setHue(hueInt);
                 LAM.setLamp(currentPopupLamp);
@@ -124,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         lampOnOff = popupView.findViewById(R.id.POTextViewAvailable);
         lampName = popupView.findViewById(R.id.POEditTextName);
         buttonNameConfirm = popupView.findViewById(R.id.POButtonConfirm);
-        
+
         switchOnOff = popupView.findViewById(R.id.POSwitchOnOff);
         switchDisco = popupView.findViewById(R.id.POSwitchDisco);
 
@@ -199,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 } else{
                     handler.removeCallbacks(runnableCode);
                     System.out.println("Disco stopped");
+                    adapter.notifyItemChanged(currentPosition);
                 }
             }
         });
