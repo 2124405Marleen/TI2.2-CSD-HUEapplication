@@ -30,7 +30,7 @@ public class LampApiManager {
 //    private Context context;    //De betreffende activity
 
     public LampApiManager(Context context, LampApiListener lampApiListener) {
-        username = "";
+//        username = "";
 //        address = getIPAddress();
         this.requestQueue = Volley.newRequestQueue(context);
         listener = lampApiListener;
@@ -44,7 +44,11 @@ public class LampApiManager {
         listener = lampApiListener;
     }
 
-    public void getIPAddress(){
+    public void getBridge(){
+        getIPAddress();
+    }
+
+    private void getIPAddress(){
         String GET_URL = "https://discovery.meethue.com/";
 
         JsonArrayRequest requestIPAddress = new JsonArrayRequest(
@@ -60,15 +64,13 @@ public class LampApiManager {
                         try {
                             JSONObject AddressJO = response.getJSONObject(0);
 
-                            address = AddressJO.getString("internalipaddress");
-                            getUsername(address);
+                            String addressS = AddressJO.getString("internalipaddress");
+                            getUsername(addressS);
 //                            Log.d("______JSONNN ADDRESS", "address: " + address);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
                              }
-
-
                     }
                 }, new Response.ErrorListener() {
             @Override
@@ -81,7 +83,7 @@ public class LampApiManager {
 //        return address;
     }
 
-    public void getUsername(String IPAddress){
+    private void getUsername(final String IPAddress){
         String POST_URL = "http://" + IPAddress + "/api";
 
         JSONObject devicetypeJO = new JSONObject();
@@ -108,9 +110,10 @@ public class LampApiManager {
                             JSONObject User = response.getJSONObject(0);
                             JSONObject Succes = User.getJSONObject("success");
 
-                            username = Succes.getString("username");
+                            String usernameS = Succes.getString("username");
 
-                            Log.d("______JSONNN USERNAME", "username: " + username);
+                            Log.d("______JSONNN USERNAME", "username: " + usernameS);
+                            listener.onBridgeAvailable(IPAddress, usernameS);
 
 
                         } catch (JSONException e) {

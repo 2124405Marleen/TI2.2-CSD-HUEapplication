@@ -9,6 +9,18 @@
     android:layout_margin="1dp"
     android:background="@drawable/border">
 
+    <ImageView
+        android:id="@+id/POImageViewColor"
+        android:layout_width="50dp"
+        android:layout_height="75dp"
+        android:layout_margin="1dp"
+        android:background="@drawable/border"
+        android:padding="5dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:color/holo_orange_dark" />
+
     <TextView
         android:id="@+id/POTextViewLampNo"
         android:layout_width="wrap_content"
@@ -16,7 +28,7 @@
         android:layout_margin="20px"
         android:text="Lamp no."
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/POImageViewColor"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -37,16 +49,16 @@
         android:background="@android:color/darker_gray"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/POLampNo" />
+        app:layout_constraintTop_toBottomOf="@+id/POImageViewColor" />
 
     <TextView
         android:id="@+id/POTextViewAvailable"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
         android:text="-"
+        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/POImageViewColor"
         app:layout_constraintTop_toBottomOf="@+id/PODivider1" />
 
     <Switch
@@ -75,7 +87,7 @@
         android:layout_marginBottom="26dp"
         android:text="Lamp name "
         app:layout_constraintBottom_toTopOf="@+id/PODivider3"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/POImageViewColor"
         app:layout_constraintTop_toBottomOf="@+id/PODivider2" />
 
     <Button

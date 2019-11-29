@@ -4,4 +4,5 @@ public interface LampApiListener {
 
     void onLampAvailable(Lamp lamp);
     void onLampError(Error error);
+    void onBridgeAvailable(String IPAdress, String Username);
 }

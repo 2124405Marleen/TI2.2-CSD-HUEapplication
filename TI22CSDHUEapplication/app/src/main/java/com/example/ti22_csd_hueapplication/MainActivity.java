@@ -1,20 +1,19 @@
 package com.example.ti22_csd_hueapplication;
 
-import androidx.annotation.ColorInt;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -48,11 +47,17 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
     private SeekBar hue, sat, bri;
     private TextView lampNo, lampOnOff;
     private Lamp currentPopupLamp;
+    //    private View currentLampView;
+    private ImageView currentLampImageView;
     private Switch switchOnOff;
     private Switch switchDisco;
     private EditText lampName;
     private Button buttonNameConfirm;
     private int currentPosition;
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor editor;
+    private ImageView imageViewColor;
+    private SwipeRefreshLayout swipeContainer;
     private Thread thread;
     Handler handler;
     Runnable runnableCode;
@@ -64,15 +69,14 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         setContentView(R.layout.activity_main);
         lamps = new ArrayList<>();
 
-        LAM = new LampApiManager("OTb8qpzAqKSnMYj8oWM8-nFQd2ZhgfMEEt4GilJ4", "192.168.1.179:80", getApplicationContext(), this);
-        LAM.getLamps();
-        LAM.getIPAddress();
-
-        Toast.makeText(getBaseContext(), "Getting lamps", Toast.LENGTH_SHORT).show();
-
+        //initialize all
+        initPreferences();
+        initLampApiManager();
         initRecycleView();
         initPopupView();
         initHandler();
+
+//        logdAllPreferences();
 
     }
 
@@ -95,6 +99,37 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             }
         };
     }
+    private void initPreferences(){
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        editor = preferences.edit();
+        //s = ip s1 = username
+        editor.putString("192.168.1.179:80", "OTb8qpzAqKSnMYj8oWM8-nFQd2ZhgfMEEt4GilJ4");
+        editor.putString("145.48.205.33", "iYrmsQq1wu5FxF9CPqpJCnm1GpPVylKBWDUsNDhB");
+        editor.apply();
+    }
+
+    private void logdAllPreferences(){
+        Map<String, ?> keyValues = preferences.getAll();
+        for (Map.Entry<String, ?> kv : keyValues.entrySet()) {
+            Log.d("___KEYS", "ip: " + kv.getKey() + " | username: " + kv.getValue().toString());
+        }
+    }
+
+    public void showNotification(String message){
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+
+    private void initLampApiManager(){
+        Map.Entry<String, ?> kv = preferences.getAll().entrySet().iterator().next();
+        Log.d("___KEY_First", "ip: " + kv.getKey() + " | username: " + kv.getValue().toString());
+
+        LAM = new LampApiManager(kv.getValue().toString(), kv.getKey(), getApplicationContext(), this);
+        LAM.getBridge();
+        LAM.getLamps();
+        showNotification("Getting Lamps");
+    }
+
     private void initRecycleView() {
         // set up the RecyclerView
         recyclerView = findViewById(R.id.rvLamps);
@@ -102,7 +137,12 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         adapter = new RecyclerViewAdapter(this, lamps);
         adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
 
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -119,8 +159,9 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         popupWidth = getApplicationContext().getResources().getDisplayMetrics().widthPixels;
         popupHeight = getApplicationContext().getResources().getDisplayMetrics().heightPixels;
         popupWidth -= popupWidth * 0.1;
-        popupHeight -= popupHeight * 0.45;
+        popupHeight -= popupHeight * 0.3;
 
+        imageViewColor = popupView.findViewById(R.id.POImageViewColor);
         lampNo = popupView.findViewById(R.id.POLampNo);
         lampOnOff = popupView.findViewById(R.id.POTextViewAvailable);
         lampName = popupView.findViewById(R.id.POEditTextName);
@@ -161,11 +202,12 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     if (nameIsSame) {
                         buttonNameConfirm.setBackgroundColor(Color.RED);
-                        Toast.makeText(getBaseContext(), "Name is equal to current name" + currentPopupLamp.getName() + " - " + newName, Toast.LENGTH_SHORT).show();
+                        showNotification("Name is equal to current name" + currentPopupLamp.getName() + " - " + newName);
 
                     } else {
                         buttonNameConfirm.setBackgroundColor(Color.GREEN);
-                        Toast.makeText(getBaseContext(), "Name is changed", Toast.LENGTH_SHORT).show();
+                        showNotification("Name is changed");
+                        
                     }
 
                     return true;
@@ -218,6 +260,8 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 //                currentLampImageView.setColorFilter(colorHue);
                 currentPopupLamp.setHue(seekBar.getProgress());
                 adapter.notifyItemChanged(currentPosition);
+                int colorHSB = HSBC.getRGBFromHSB(seekBar.getProgress(), currentPopupLamp.getSat(), currentPopupLamp.getBri());
+                imageViewColor.setColorFilter(colorHSB);
 
 //                Log.d("_____HUE Item Position", "Position: " + currentPosition);
             }
@@ -241,6 +285,8 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 currentPopupLamp.setSat(seekBar.getProgress());
                 adapter.notifyItemChanged(currentPosition);
+                int colorHSB = HSBC.getRGBFromHSB(currentPopupLamp.getHue(), seekBar.getProgress(), currentPopupLamp.getBri());
+                imageViewColor.setColorFilter(colorHSB);
             }
 
             @Override
@@ -261,6 +307,8 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 currentPopupLamp.setBri(seekBar.getProgress());
                 adapter.notifyItemChanged(currentPosition);
+                int colorHSB = HSBC.getRGBFromHSB(currentPopupLamp.getHue(), currentPopupLamp.getSat(), seekBar.getProgress());
+                imageViewColor.setColorFilter(colorHSB);
             }
 
             @Override
@@ -275,6 +323,15 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 LAM.setLamp(currentPopupLamp);
             }
         });
+
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                lamps.clear();
+                adapter.notifyDataSetChanged();
+                LAM.getLamps();
+            }
+        });
     }
 
     @Override
@@ -282,11 +339,18 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         lamps.add(lamp);
         Log.d("onLightAvailable", "Added" + lamp.toString());
         adapter.notifyDataSetChanged();
+        swipeContainer.setRefreshing(false);
     }
 
     @Override
     public void onLampError(Error error) {
         Log.d("onLampError", error.toString());
+    }
+
+    @Override
+    public void onBridgeAvailable(String IPAdress, String Username) {
+        editor.putString(IPAdress, Username);
+        editor.apply();
     }
 
     @Override
@@ -300,6 +364,8 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         currentPosition = position;
 
         //setting current light values
+        int colorHSB = HSBC.getRGBFromHSB(CL.getHue(), CL.getSat(), CL.getBri());
+        imageViewColor.setColorFilter(colorHSB);
         lampNo.setText(String.valueOf(CL.getId()));
         lampOnOff.setText((CL.isOn() ? "true" : "false"));
         switchOnOff.setChecked(CL.isOn());
