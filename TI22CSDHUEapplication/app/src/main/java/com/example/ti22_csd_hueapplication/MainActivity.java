@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.IllegalFormatCodePointException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements LampApiListener, RecyclerViewAdapter.ItemClickListener {
@@ -74,13 +75,13 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         initLampApiManager();
         initRecycleView();
         initPopupView();
-        initHandler();
+        initDiscoHandler();
 
 //        logdAllPreferences();
 
     }
 
-    private void initHandler(){
+    private void initDiscoHandler(){
         handler = new Handler();
          runnableCode = new Runnable() {
 
