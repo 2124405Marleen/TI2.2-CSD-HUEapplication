@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hue_label">Kleur</string>
+    <string name="sat_label">Felheid</string>
+    <string name="bri_label">Helderheid</string>
+</resources>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Lamp App Marleen - Lorenzo</string>
+    <string name="app_name" translatable="false">Lamp App Marleen - Lorenzo</string>
     <string name="hue_label">Hue</string>
     <string name="sat_label">Saturation</string>
     <string name="bri_label">Brightness</string>
