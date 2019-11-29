@@ -45,11 +45,12 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
     private SeekBar hue, sat, bri;
     private TextView lampNo, lampOnOff;
     private Lamp currentPopupLamp;
-    private View currentLampView;
+    //    private View currentLampView;
     private ImageView currentLampImageView;
     private Switch switchOnOff;
     private EditText lampName;
     private Button buttonNameConfirm;
+    private int currentPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 
         LAM = new LampApiManager("OTb8qpzAqKSnMYj8oWM8-nFQd2ZhgfMEEt4GilJ4", "192.168.1.179:80", getApplicationContext(), this);
         LAM.getLamps();
+        LAM.getIPAddress();
 
         Toast.makeText(getBaseContext(), "Getting lamps", Toast.LENGTH_SHORT).show();
 
@@ -97,8 +99,26 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         lampOnOff = popupView.findViewById(R.id.POTextViewAvailable);
         lampName = popupView.findViewById(R.id.POEditTextName);
         buttonNameConfirm = popupView.findViewById(R.id.POButtonConfirm);
-        buttonNameConfirm.setOnTouchListener(new View.OnTouchListener() {
 
+
+        switchOnOff = popupView.findViewById(R.id.POSwitchOnOff);
+
+
+        //set seekbars: hue, sat, bri
+        hue = popupView.findViewById(R.id.POHue);
+        sat = popupView.findViewById(R.id.POSaturation);
+        bri = popupView.findViewById(R.id.POBrightness);
+
+        initListeners();
+
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    public void initListeners() {
+
+        //button name confirm listener
+        buttonNameConfirm.setOnTouchListener(new View.OnTouchListener() {
+            @Override
             public boolean onTouch(View v, MotionEvent event) {
 
                 String newName = lampName.getText().toString();
@@ -109,11 +129,11 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
                 } else {
                     currentPopupLamp.setName(newName);
                     LAM.setLampName(currentPopupLamp);
-                    adapter.notifyDataSetChanged();
+//                    adapter.notifyDataSetChanged();
                     nameIsSame = false;
                 }
 
-                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     if (nameIsSame) {
                         buttonNameConfirm.setBackgroundColor(Color.RED);
                         Toast.makeText(getBaseContext(), "Name is equal to current name" + currentPopupLamp.getName() + " - " + newName, Toast.LENGTH_SHORT).show();
@@ -131,28 +151,27 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
             }
         });
 
-        switchOnOff = popupView.findViewById(R.id.POSwitchOnOff);
+        //switch listener
         switchOnOff.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 currentPopupLamp.setOn(isChecked);
                 lampOnOff.setText((isChecked ? "true" : "false"));
+//                adapter.notifyDataSetChanged();
+                adapter.notifyItemChanged(currentPosition);
                 LAM.setLampOnOff(currentPopupLamp);
-                adapter.notifyDataSetChanged();
             }
         });
-
-        //set seekbars: hue, sat, bri
-        hue = popupView.findViewById(R.id.POHue);
-        sat = popupView.findViewById(R.id.POSaturation);
-        bri = popupView.findViewById(R.id.POBrightness);
 
         //set seekbars listeners
         hue.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                currentLampImageView = currentLampView.findViewById(R.id.imageViewColor);
-                int colorHue = HSBC.getRGBFromHSB(seekBar.getProgress(), currentPopupLamp.getSat(), currentPopupLamp.getBri());
-                currentLampImageView.setColorFilter(colorHue);
+//                int colorHue = HSBC.getRGBFromHSB(seekBar.getProgress(), currentPopupLamp.getSat(), currentPopupLamp.getBri());
+//                currentLampImageView.setColorFilter(colorHue);
+                currentPopupLamp.setHue(seekBar.getProgress());
+                adapter.notifyItemChanged(currentPosition);
+
+//                Log.d("_____HUE Item Position", "Position: " + currentPosition);
             }
 
             @Override
@@ -162,8 +181,9 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d("onStopTrackingTouch", "hue value: " + seekBar.getProgress());
+//                Log.d("onStopTrackingTouch", "hue value: " + seekBar.getProgress());
                 currentPopupLamp.setHue(seekBar.getProgress());
+                adapter.notifyItemChanged(currentPosition);
                 LAM.setLamp(currentPopupLamp);
             }
         });
@@ -171,9 +191,8 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
         sat.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                currentLampImageView = currentLampView.findViewById(R.id.imageViewColor);
-                int colorSat = HSBC.getRGBFromHSB(currentPopupLamp.getHue(), seekBar.getProgress(), currentPopupLamp.getBri());
-                currentLampImageView.setColorFilter(colorSat);
+                currentPopupLamp.setSat(seekBar.getProgress());
+                adapter.notifyItemChanged(currentPosition);
             }
 
             @Override
@@ -183,19 +202,17 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d("onStopTrackingTouch", "sat value: " + seekBar.getProgress());
                 currentPopupLamp.setSat(seekBar.getProgress());
+                adapter.notifyItemChanged(currentPosition);
                 LAM.setLamp(currentPopupLamp);
-                HSBC.getRGBFromHSB(currentPopupLamp.getHue(), currentPopupLamp.getSat(), currentPopupLamp.getBri());
             }
         });
 
         bri.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                currentLampImageView = currentLampView.findViewById(R.id.imageViewColor);
-                int colorBri = HSBC.getRGBFromHSB(currentPopupLamp.getHue(), currentPopupLamp.getSat(), seekBar.getProgress());
-                currentLampImageView.setColorFilter(colorBri);
+                currentPopupLamp.setBri(seekBar.getProgress());
+                adapter.notifyItemChanged(currentPosition);
             }
 
             @Override
@@ -205,13 +222,11 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Log.d("onStopTrackingTouch", "bri value: " + seekBar.getProgress());
                 currentPopupLamp.setBri(seekBar.getProgress());
+                adapter.notifyItemChanged(currentPosition);
                 LAM.setLamp(currentPopupLamp);
-                HSBC.getRGBFromHSB(currentPopupLamp.getHue(), currentPopupLamp.getSat(), currentPopupLamp.getBri());
             }
         });
-
     }
 
     @Override
@@ -229,11 +244,12 @@ public class MainActivity extends AppCompatActivity implements LampApiListener, 
     @Override
     public void onItemClick(View view, int position) {
 //        Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
-        Log.d("onItemClick", "onItemClick: " + position);
+        Log.d("________onItemClick", "onItemClick: " + position);
 
         //get clicked Light
-        Lamp CL = currentPopupLamp = lamps.get(position);
-        currentLampView = view;
+        Lamp CL = lamps.get(position);
+        currentPopupLamp = lamps.get(position);
+        currentPosition = position;
 
         //setting current light values
         lampNo.setText(String.valueOf(CL.getId()));

@@ -7,6 +7,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -24,9 +25,16 @@ public class LampApiManager {
     private RequestQueue requestQueue;
     private String username;
     private String address;
-//    private String url = "http://145.49.45.174/api/3a75efa57480163a815bc63f9209cef";
+    //    private String url = "http://145.49.45.174/api/3a75efa57480163a815bc63f9209cef";
     private LampApiListener listener;
 //    private Context context;    //De betreffende activity
+
+    public LampApiManager(Context context, LampApiListener lampApiListener) {
+        username = "";
+//        address = getIPAddress();
+        this.requestQueue = Volley.newRequestQueue(context);
+        listener = lampApiListener;
+    }
 
     public LampApiManager(String username, String address, Context context, LampApiListener lampApiListener) {
         this.username = username;
@@ -34,6 +42,94 @@ public class LampApiManager {
 //        this.context = context;
         this.requestQueue = Volley.newRequestQueue(context);
         listener = lampApiListener;
+    }
+
+    public void getIPAddress(){
+        String GET_URL = "https://discovery.meethue.com/";
+
+        JsonArrayRequest requestIPAddress = new JsonArrayRequest(
+                Request.Method.GET,
+                GET_URL,
+                null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d("!!!!!!!IPAddress_REQ", response.toString());
+
+                        //TODO: fix thread interrupted foutmelding
+                        try {
+                            JSONObject AddressJO = response.getJSONObject(0);
+
+                            address = AddressJO.getString("internalipaddress");
+                            getUsername(address);
+//                            Log.d("______JSONNN ADDRESS", "address: " + address);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                             }
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        this.requestQueue.add(requestIPAddress);
+
+//        return address;
+    }
+
+    public void getUsername(String IPAddress){
+        String POST_URL = "http://" + IPAddress + "/api";
+
+        JSONObject devicetypeJO = new JSONObject();
+
+        try {
+
+            devicetypeJO.put("devicetype", "MijnApp#LRS");
+
+        } catch (JSONException exception) {
+            exception.printStackTrace();
+        }
+
+        CustomJsonArrayRequest requestIPAddress = new CustomJsonArrayRequest(
+                Request.Method.POST,
+                POST_URL,
+                devicetypeJO,
+
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d("!!!!!!!username_REQ", response.toString());
+
+                        try {
+                            JSONObject User = response.getJSONObject(0);
+                            JSONObject Succes = User.getJSONObject("success");
+
+                            username = Succes.getString("username");
+
+                            Log.d("______JSONNN USERNAME", "username: " + username);
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                },
+
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+
+        this.requestQueue.add(requestIPAddress);
+
     }
 
     public void getLamps() {
@@ -98,7 +194,7 @@ public class LampApiManager {
         JSONObject stateJO = new JSONObject();
 
         try {
-            if(lamp.isOn()){
+            if (lamp.isOn()) {
                 stateJO.put("on", lamp.isOn());
                 stateJO.put("hue", lamp.getHue());
                 stateJO.put("sat", lamp.getSat());
@@ -179,14 +275,14 @@ public class LampApiManager {
     }
 
 
-    public void setLampOnOff(Lamp lamp){
+    public void setLampOnOff(Lamp lamp) {
         String PUT_URL_StateOnOFF = "http://" + address + "/api/" + username + "/lights/" + lamp.getId() + "/state/";
         Log.d("!!!!!!!!!", "RU: " + PUT_URL_StateOnOFF);
 
         JSONObject stateJO = new JSONObject();
 
         try {
-                stateJO.put("on", lamp.isOn());
+            stateJO.put("on", lamp.isOn());
 
         } catch (JSONException exception) {
             exception.printStackTrace();
